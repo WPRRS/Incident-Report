@@ -183,9 +183,50 @@
   .pd .lr ol{margin:1mm 0 0;padding-left:6mm}
   .pd .nt{border:1.6px solid #f29a2e;padding:2mm;margin-top:4mm;font-weight:700;break-inside:avoid}
   .pd .pv2{font-family:Arial,Helvetica,sans-serif;font-style:italic;font-weight:700;font-size:8pt;margin-top:2.5mm}
+
+  /* Accessibility */
+  html{font-size:100%}
+  .skip{position:absolute;left:-999px;top:0;background:#fff;color:var(--primary);padding:10px 14px;z-index:99;font-weight:700}
+  .skip:focus{left:8px;top:8px}
+  .a11y{background:#003f70;color:#fff;padding:6px 16px;font-size:.85rem}
+  .a11y .in{max-width:860px;margin:0 auto;display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+  .a11y button{background:rgba(255,255,255,.16);color:#fff;padding:5px 10px;font-size:.85rem;min-width:36px}
+  .a11y button[aria-pressed=true]{background:var(--yellow);color:#14232f}
+  button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,summary:focus-visible{outline:3px solid #ff9f1c;outline-offset:2px}
+  @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+  body.hc{--bg:#fff;--ink:#000;--muted:#000;--line:#000;--primary:#003a6b}
+  body.hc input,body.hc select,body.hc textarea{border:2px solid #000}
+  body.hc section{border:2px solid #000}
+  body.hc .qual{background:#fff}
+  /* Voice */
+  .voice{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:8px}
+  .voice button,.voice label.vbtn{padding:7px 12px;font-size:.85rem;border-radius:8px;border:1px solid var(--primary);background:#fff;color:var(--primary);cursor:pointer;font-weight:600}
+  .voice button.rec{background:var(--red);color:#fff;border-color:var(--red)}
+  .voice select{width:auto;max-width:100%;font-size:.85rem;padding:6px}
+  .voice .vs{font-size:.8rem;color:var(--muted);flex:1 1 200px}
+  .voice input[type=file]{position:absolute;opacity:0;width:1px;height:1px}
+  .voice label.vbtn:focus-within{outline:3px solid #ff9f1c;outline-offset:2px}
+  /* compact quality panel */
+  .qual{margin-top:8px;padding:6px 10px;border-radius:8px}
+  .qual .qh{font-size:.78rem;margin-bottom:4px}
+  .qual .meter{height:5px;margin-bottom:5px}
+  .qual details summary{font-size:.78rem;cursor:pointer;color:var(--primary);font-weight:600}
+  .qual details ul{margin-top:4px}
+  .qual li{font-size:.78rem}
+  .qual .ins{margin-top:5px;gap:4px}
+  .qual .ins button{padding:2px 8px;font-size:.74rem}
+  .qual .flag{margin-top:4px;font-size:.78rem}
 </style>
 </head>
 <body>
+<a class="skip" href="#viewForm">Skip to the form</a>
+<div class="a11y noprint" role="toolbar" aria-label="Accessibility options"><div class="in">
+  <span>Accessibility:</span>
+  <button type="button" id="fsDown" aria-label="Smaller text">A&minus;</button>
+  <button type="button" id="fsReset" aria-label="Normal text size">A</button>
+  <button type="button" id="fsUp" aria-label="Larger text">A+</button>
+  <button type="button" id="hcBtn" aria-pressed="false">High contrast</button>
+</div></div>
 <header>
   <div class="hd">
     <div class="brand">
@@ -381,6 +422,12 @@
     <p class="hint" style="margin:0 0 8px">Write in the first person and in the order it happened. Stick to what you saw and heard. The checklist below shows the points a DC hearing usually asks about.</p>
     <label for="desc">What happened?</label>
     <textarea id="desc" name="desc" placeholder="e.g. In the 63rd minute, after a ruck near the 22, I saw red number 5 strike the opponent on the jaw with a closed fist. I was about 10 metres away, side-on to the ruck, with a clear view. I blew my whistle, showed a red card and told the captain why…"></textarea>
+    <div class="voice noprint">
+      <button type="button" id="micBtn" aria-pressed="false">🎤 Dictate</button>
+      <label class="vbtn" for="audioFile">🎧 Upload audio file<input type="file" id="audioFile" accept="audio/*,.m4a,.mp3,.wav,.ogg,.opus,.aac,.webm"></label>
+      <select id="voiceLang" aria-label="Spoken language"><option value="en-ZA">English (South Africa)</option><option value="en-GB">English (UK)</option><option value="en-US">English (US)</option><option value="af-ZA">Afrikaans</option></select>
+      <span class="vs" id="voiceStatus" role="status" aria-live="polite">Speak or upload a voice note and it is added to the description as text. Then use Preview &amp; improve to turn it into a report.</span>
+    </div>
     <div id="qDesc" class="qual noprint"></div>
     <button type="button" class="ai-btn" id="previewBtn" disabled>Preview &amp; improve report</button>
     <p class="hint" id="previewHint">Write the description first (at least a couple of sentences) to unlock the preview.</p>
@@ -391,7 +438,7 @@
     <button type="button" class="secondary" id="print">Download PDF</button>
     <button type="button" class="danger" id="clear">Clear form</button>
   </div>
-  <div class="status" id="status"></div>
+  <div class="status" id="status" role="status" aria-live="polite"></div>
 
   <section class="notice" style="margin-top:16px">
     <p><b>Please email this form to ash.mac@vodamail.co.za within 24 hours after the match.</b> A copy can be sent via WhatsApp to Ashley Mackay (082 255 0242).</p>
@@ -712,13 +759,16 @@
   function renderQ(pid,ta){
     var box=el(pid), q=quality(ta.value);
     var col=q.pct<40?'#d91f28':q.pct<75?'#e3b800':'#6ca003';
-    var h='<div class="qh"><span>Report quality: '+q.label+' ('+q.done+' of '+q.total+' points covered)</span><span>'+q.words+' words</span></div>'+
-      '<div class="meter"><i style="width:'+Math.max(q.pct,4)+'%;background:'+col+'"></i></div><ul>'+
-      q.items.map(function(i){return '<li class="'+(i.ok?'ok':'')+'"><span class="mk">'+(i.ok?'✓':'○')+'</span><span>'+esc(i.label)+'</span></li>'}).join('')+'</ul>';
+    var h='<div class="qh"><span>Report quality: '+q.label+' ('+q.done+'/'+q.total+')</span><span>'+q.words+' words</span></div>'+
+      '<div class="meter"><i style="width:'+Math.max(q.pct,4)+'%;background:'+col+'"></i></div>'+
+      '<details><summary>Show checklist</summary><ul>'+
+      q.items.map(function(i){return '<li class="'+(i.ok?'ok':'')+'"><span class="mk">'+(i.ok?'✓':'○')+'</span><span>'+esc(i.label)+'</span></li>'}).join('')+'</ul></details>';
     var miss=q.items.filter(function(i){return !i.ok});
     if(miss.length) h+='<div class="ins">'+miss.map(function(i){return '<button type="button" data-ins="'+i.k+'">+ '+esc(i.label)+'</button>'}).join('')+'<button type="button" data-ins="__all">+ Add all missing points</button></div>';
     q.flags.forEach(function(x){h+='<div class="flag">'+esc(x)+'</div>'});
+    var wasOpen=box.querySelector('details')&&box.querySelector('details').open;
     box.innerHTML=h;
+    if(wasOpen) box.querySelector('details').open=true;
   }
   function bindQ(pid,ta){
     el(pid).addEventListener('click',function(e){
@@ -1347,6 +1397,95 @@
 
   restore();
   hintUI();
+
+  /* ---------- Accessibility ---------- */
+  (function(){
+    var A='wprrs_a11y',size=100,hc=false;
+    try{var o=JSON.parse(localStorage.getItem(A)||'{}');size=o.size||100;hc=!!o.hc}catch(e){}
+    function apply(){
+      document.documentElement.style.fontSize=size+'%';
+      document.body.classList.toggle('hc',hc);
+      el('hcBtn').setAttribute('aria-pressed',hc?'true':'false');
+      try{localStorage.setItem(A,JSON.stringify({size:size,hc:hc}))}catch(e){}
+    }
+    el('fsDown').onclick=function(){size=Math.max(85,size-10);apply()};
+    el('fsUp').onclick=function(){size=Math.min(150,size+10);apply()};
+    el('fsReset').onclick=function(){size=100;apply()};
+    el('hcBtn').onclick=function(){hc=!hc;apply()};
+    apply();
+  })();
+
+  /* ---------- Voice: dictation + audio file ---------- */
+  (function(){
+    var vs=el('voiceStatus'),mic=el('micBtn'),ta=el('desc'),rec=null,on=false;
+    function vsay(m){vs.textContent=m}
+    function append(t){
+      t=(t||'').replace(/\s+/g,' ').trim(); if(!t) return;
+      var v=ta.value.replace(/\s+$/,'');
+      ta.value=v+(v?' ':'')+t.charAt(0).toUpperCase()+t.slice(1)+(/[.!?]$/.test(t)?'':'.');
+      ta.dispatchEvent(new Event('input',{bubbles:true}));
+    }
+    var SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+    if(!SR){mic.disabled=true;mic.title='Dictation is not supported in this browser. Try Chrome, Edge or Safari.'}
+    function stop(){on=false;mic.classList.remove('rec');mic.setAttribute('aria-pressed','false');mic.textContent='🎤 Dictate';if(rec){try{rec.stop()}catch(e){}}}
+    mic.onclick=function(){
+      if(!SR) return vsay('Dictation is not supported in this browser. Use Chrome, Edge or Safari, or upload an audio file.');
+      if(on){stop();return vsay('Dictation stopped.')}
+      rec=new SR();rec.lang=el('voiceLang').value;rec.continuous=true;rec.interimResults=true;
+      rec.onresult=function(e){
+        var interim='';
+        for(var i=e.resultIndex;i<e.results.length;i++){
+          if(e.results[i].isFinal) append(e.results[i][0].transcript); else interim+=e.results[i][0].transcript;
+        }
+        vsay(interim?'Listening… '+interim:'Listening… speak now.');
+      };
+      rec.onerror=function(e){
+        var m=e.error==='not-allowed'?'Microphone access was blocked. Allow the microphone in your browser and try again.':e.error==='no-speech'?'No speech heard.':'Dictation error: '+e.error;
+        stop();vsay(m);
+      };
+      rec.onend=function(){if(on){try{rec.start()}catch(e){stop()}}}; // keep going until stopped
+      try{rec.start();on=true;mic.classList.add('rec');mic.setAttribute('aria-pressed','true');mic.textContent='⏹ Stop dictating';vsay('Listening… speak now. Press Stop when done.')}
+      catch(e){vsay('Could not start the microphone.')}
+    };
+
+    // Audio file -> text, in the browser (Whisper model; downloaded once on first use, about 75 MB)
+    var asr=null;
+    function loadAsr(){
+      if(asr) return asr;
+      vsay('Loading the speech-to-text model (first time only, about 75 MB)…');
+      asr=import('https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.0.0').then(function(m){
+        return m.pipeline('automatic-speech-recognition','Xenova/whisper-base.en',{progress_callback:function(p){
+          if(p&&p.status==='progress') vsay('Downloading model… '+Math.round(p.progress||0)+'%');
+        }});
+      }).catch(function(e){asr=null;throw e});
+      return asr;
+    }
+    function decode(file){
+      return file.arrayBuffer().then(function(buf){
+        var AC=window.AudioContext||window.webkitAudioContext,ctx=new AC({sampleRate:16000});
+        return new Promise(function(ok,no){ctx.decodeAudioData(buf,ok,no)}).then(function(a){
+          var ch=a.getChannelData(0);try{ctx.close()}catch(e){}return ch;
+        });
+      });
+    }
+    el('audioFile').onchange=function(){
+      var f=this.files&&this.files[0],inp=this; if(!f) return;
+      if(f.size>60*1024*1024){vsay('That file is too large (limit 60 MB).');return}
+      vsay('Reading audio…');
+      decode(f).then(function(a){
+        return loadAsr().then(function(pipe){
+          vsay('Converting speech to text… this can take a minute for long recordings.');
+          return pipe(a,{chunk_length_s:30,stride_length_s:5});
+        });
+      }).then(function(r){
+        var t=(r&&r.text||'').trim();
+        if(!t) return vsay('No speech was found in that file.');
+        append(t);vsay('Done. The text was added to the description. Please read it and fix any mistakes, names especially.');
+      }).catch(function(e){
+        vsay('Could not convert that file ('+(e&&e.message?e.message:'error')+'). Check your internet connection or try Dictate instead.');
+      }).then(function(){inp.value=''});
+    };
+  })();
 })();
 </script>
 </body>
