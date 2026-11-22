@@ -130,7 +130,7 @@
   @media(max-width:520px){.scoreboard{grid-template-columns:1fr}.vs{text-align:center;padding:0}.lawrow{grid-template-columns:1fr}.addlaw{flex-direction:column}.dgrid{grid-template-columns:1fr}}
   /* ===== Printed / PDF report: follows the WP Referees incident report template ===== */
   #printDoc{display:none}
-  @page{size:A4;margin:10mm}
+  @page{size:A4;margin:8mm 10mm}
   @media print{
     html{-webkit-print-color-adjust:exact;print-color-adjust:exact}
     body{background:#fff}
@@ -138,12 +138,15 @@
     body.pdf-mode #printDoc{display:block}
   }
   .pd{font-family:Calibri,Carlito,'Segoe UI',Arial,sans-serif;font-size:10.5pt;color:#000;line-height:1.25}
-  .pd .top img{height:21mm;width:auto;display:block}
-  .pd .ttl{font-weight:700;font-style:italic;font-size:11.5pt;margin:1mm 0 4mm 10mm;max-width:165mm}
-  .pd .typ{display:flex;align-items:center;gap:3mm;margin-bottom:2mm}
+  .pd .top img{height:15mm;width:auto;display:block}
+  .pd .ttl{font-weight:700;font-style:italic;font-size:11.5pt;margin:1mm 0 3mm 10mm;max-width:165mm}
+  .pd .typ{display:flex;align-items:center;gap:3mm;margin-bottom:1.5mm}
   .pd .typ .lab{font-weight:700;font-size:10.5pt}
   .pd .typ .lab i{font-weight:700}
-  .pd .tb{border:1px solid #999;padding:2.2mm 3mm;text-align:center;font-size:9.5pt;min-width:27mm;line-height:1.35}
+  .pd .tb{border:1px solid #999;padding:1.6mm 3mm;text-align:center;font-size:9.5pt;min-width:27mm;line-height:1.35}
+  .pd .tb.ys{border:1.6px solid #e6d200}
+  .pd .off{border:1.6px solid transparent;border-radius:999px;padding:0 2mm;display:inline-block;font-weight:700;font-size:9.5pt}
+  .pd .orow td{height:7.5mm}
   .pd .tb.sd{border:1.6px solid #d91f28}
   .pd .tb.mb{border:1.6px solid #f29a2e}
   .pd .tb.ot{border:1.6px solid #005597}
@@ -151,32 +154,32 @@
   .pd .tb.sel{font-weight:700;outline:2.6px solid #000;outline-offset:1.5px;background:#fbf072}
   .pd .note{font-size:9pt;font-style:italic;margin:0 0 2mm}
   .pd table{border-collapse:collapse;width:100%;table-layout:fixed;break-inside:avoid}
-  .pd td,.pd th{border:1px solid #000;padding:1.3mm 2mm;vertical-align:middle;text-align:left;overflow-wrap:anywhere}
+  .pd td,.pd th{border:1px solid #000;padding:.9mm 2mm;vertical-align:middle;text-align:left;overflow-wrap:anywhere}
   .pd .lb{font-weight:700}
   .pd .grey{background:#e6e6e6;text-align:center;font-style:italic;font-weight:700}
-  .pd .laws{font-weight:700;font-size:12.5pt;line-height:2}
+  .pd .laws{font-weight:700;font-size:11.5pt;line-height:1.6}
   .pd .laws span{border:1.6px solid transparent;border-radius:999px;padding:0 1.8mm;margin:0 .3mm;display:inline-block;line-height:1.35}
   .pd .circ{border:1.6px solid #000!important;background:#fbf072}
   .pd .oth{font-size:10pt;font-weight:700;margin-top:1.5mm;line-height:1.4}
   .pd .oth span{display:inline;border:0;padding:0;background:none}
-  .pd .row2{display:flex;align-items:center;gap:4mm;margin:3mm 0}
+  .pd .row2{display:flex;align-items:center;gap:4mm;margin:1.5mm 0}
   .pd .row2 .lab{font-weight:700;min-width:58mm}
-  .pd .bx{border:1px solid #000;min-width:23mm;padding:3.2mm 2mm;text-align:center;font-size:10pt}
+  .pd .bx{border:1px solid #000;min-width:23mm;padding:1.6mm 2mm;text-align:center;font-size:10pt}
   .pd .bx.sel{border-width:2.6px;background:#fbf072;font-weight:700}
   .pd .bx.num{min-width:23mm;font-weight:700;font-size:12pt}
-  .pd .rule{height:1.6mm;background:#000;margin:4mm 0}
+  .pd .rule{height:1.6mm;background:#000;margin:2mm 0}
   .pd .yn{font-weight:700;font-size:12pt}
   .pd .yn span{border:1.6px solid transparent;border-radius:999px;padding:0 2.4mm;margin-left:2mm;display:inline-block}
-  .pd .dh{font-weight:700;font-size:11pt;margin:4mm 0 1mm}
+  .pd .dh{font-weight:700;font-size:11pt;margin:3mm 0 1mm}
   .pd .dh small{font-size:8.5pt}
   .pd .sg{max-height:10mm;max-width:100%;display:block}
-  .pd .dd{text-align:center;font-weight:700;margin:3mm 0 1mm}
-  .pd .lined{white-space:pre-wrap;line-height:7mm;min-height:42mm;padding:0 1mm;font-size:10.5pt;
+  .pd .dd{text-align:center;font-weight:700;margin:2.5mm 0 1mm;break-after:avoid}
+  .pd .lined{white-space:pre-wrap;line-height:7mm;min-height:28mm;padding:0 1mm;font-size:10.5pt;
     background-image:repeating-linear-gradient(to bottom,transparent 0,transparent 6.4mm,#6f9fd4 6.4mm,#6f9fd4 7mm)}
   .pd .lr{margin-top:4mm;font-size:10pt;break-inside:avoid}
   .pd .lr ol{margin:1mm 0 0;padding-left:6mm}
-  .pd .nt{border:1.6px solid #f29a2e;padding:2.5mm;margin-top:6mm;font-weight:700;break-inside:avoid}
-  .pd .pv2{font-family:Arial,Helvetica,sans-serif;font-style:italic;font-weight:700;font-size:8.5pt;margin-top:4mm}
+  .pd .nt{border:1.6px solid #f29a2e;padding:2mm;margin-top:4mm;font-weight:700;break-inside:avoid}
+  .pd .pv2{font-family:Arial,Helvetica,sans-serif;font-style:italic;font-weight:700;font-size:8pt;margin-top:2.5mm}
 </style>
 </head>
 <body>
@@ -889,14 +892,95 @@
     download(fname(r.d),r.txt);
     say(r.ok?'Saved to the Dashboard and downloaded. Press "Clear form" to start a new report.':'Downloaded, but the report could not be saved to the Dashboard (browser storage is blocked or full).');
   };
-  el('print').onclick=function(){window.print()};
-  el('clear').onclick=function(){
-    if(confirm('Clear everything on this form?')){
-      f.reset();applyData({});P.laws=[];curId='';
-      try{localStorage.removeItem(KEY);localStorage.removeItem(CUR)}catch(e){}
-      say('Form cleared.');
-    }
-  };
+  // ---- Clear the form (saved Dashboard reports are not touched) ----
+  function doClear(){
+    if(!confirm('Clear everything on this form? Reports already saved on the Dashboard are not affected.')) return;
+    f.reset();
+    f.querySelectorAll('input[type=hidden]').forEach(function(x){x.value=''}); // chosen laws and signatures
+    applyData({});
+    P.laws=[];P.own=P.applied=P.last=P.orig=undefined;curId='';
+    try{localStorage.removeItem(KEY);localStorage.removeItem(CUR)}catch(e){}
+    el('previewWrap').classList.add('hidden');f.classList.remove('hidden');
+    say('Form cleared. You can start a new report.');
+    window.scrollTo(0,0);
+  }
+  el('clear').onclick=doClear;
+  el('clearTop').onclick=doClear;
+
+  // ---- PDF in the layout of the WP Referees incident report template ----
+  var LOGO_SRC=(document.querySelector('.logo img')||{}).src||'';
+  function pdfDate(s){return /^\d{4}-\d{2}-\d{2}$/.test(s||'')?s.split('-').reverse().join('/'):(s||'')}
+  function lawNum(l){var x=String(l).match(/^Law\s+(\d+\.\d+(?:\.[a-z])?)/i);return x?x[1].toLowerCase():''}
+  function buildDoc(d,descText,laws){
+    var m=modeOf(d), t=normType(d.rtype), home=d.home||'', away=d.away||'';
+    var nums={}, oth=[], info=[];
+    laws.forEach(function(l){var k=lawNum(l.law);if(k&&SUBT[k]) nums[k]=1; else oth.push(l.law)});
+    var withReason=laws.filter(function(l){return l.reason});
+    var pn='',pt='',pp='',pnm='';
+    if(m==='player'){pn=d.pname;pt=teamName(d,d.pteam);pp=d.ppos;pnm=d.pnum}
+    else if(m==='team'){pn='Team / Coaching staff: '+tinvList(d).join(', ');pt=teamName(d,d.tteam);if(d.tdetails) info.push('Names / details: '+d.tdetails)}
+    else pn='Safety reason: '+(d.safety||'');
+    if(t==='Other') info.push('Type of report: Other'+(d.rtypeText?' – '+d.rtypeText:''));
+    var rl=redLine(d); if(rl) info.push(rl);
+    if(hasLaw(d,VALUES_LBL)&&d.val) info.push('Values breached: '+d.val.join(', '));
+    var picked=(t===T_YC||t===T_RC||t===T_MB);
+    var yn=function(v){return '<span class="yn"><span class="'+(v==='Yes'?'circ':'')+'">YES</span><span class="'+(v==='No'?'circ':'')+'">NO</span></span>'};
+    var det=d.det||[];
+    var h='<div class="top">'+(LOGO_SRC?'<img src="'+LOGO_SRC+'" alt="">':'')+'</div>'+
+      '<div class="ttl">REFEREE/ASSISTANT REFEREE REPORT ON TEMPORARY SUSPENSION OR SEND OFF OR MATCH BLOWN OFF</div>'+
+      '<div class="typ'+(picked?' pick':'')+'"><div class="lab">PLEASE INDICATE WHETHER THIS WAS A:<br><i>(Please circle)</i></div>'+
+        '<div class="tb ys'+(t===T_YC?' sel':'')+'">Temporary<br>Suspension</div><b>OR</b>'+
+        '<div class="tb sd'+(t===T_RC?' sel':'')+'">SEND OFF</div><b>OR</b>'+
+        '<div class="tb mb'+(t===T_MB?' sel':'')+'">MATCH<br>BLOWN OFF</div></div>'+
+      '<table><colgroup><col style="width:23%"><col style="width:27%"><col style="width:23%"><col style="width:27%"></colgroup>'+
+      '<tr><td class="lb">WPRU Competition:</td><td colspan="3">'+esc(compLabel(d))+'</td></tr>'+
+      '<tr><td class="lb">Home Team</td><td>'+esc(home)+'</td><td class="lb">Visiting Team</td><td>'+esc(away)+'</td></tr>'+
+      '<tr><td class="lb">Player’s Full Name:</td><td>'+esc(pn)+'</td><td class="lb">Team:</td><td>'+esc(pt)+'</td></tr>'+
+      '<tr><td class="lb">Playing Position:</td><td>'+esc(pp)+'</td><td class="lb">Playing Number:</td><td>'+esc(pnm)+'</td></tr>'+
+      '<tr><td class="lb">Venue:</td><td>'+esc(d.venue)+'</td><td class="lb">Date of Match:</td><td>'+esc(pdfDate(d.date))+'</td></tr>'+
+      '<tr><td class="lb">Score at time of incident:</td><td colspan="3">'+esc((home||'Home')+'  '+(d.hs||0)+'  –  '+(d.as||0)+'  '+(away||'Visiting'))+'</td></tr>'+
+      '<tr><td colspan="4" class="grey">Circle the appropriate Law Infringement</td></tr>'+
+      '<tr><td colspan="4"><div class="laws">'+Object.keys(SUBT).map(function(n){return '<span class="'+(nums[n]?'circ':'')+'">'+n+'</span>'}).join(' ')+'</div>'+
+        (oth.length?'<div class="oth">Other law(s): '+esc(oth.join('; '))+'</div>':'')+'</td></tr>'+
+      (info.length?'<tr><td class="lb">Additional information:</td><td colspan="3">'+info.map(esc).join('<br>')+'</td></tr>':'')+
+      '</table>'+
+      '<div class="row2"><div class="lab">Period of Game when incident occurred:<br><i>(Please circle)</i></div>'+
+        '<div class="bx'+(d.half==='1st half'?' sel':'')+'">1<sup>st</sup> Half</div>'+
+        '<div class="bx'+(d.half==='2nd half'?' sel':'')+'">2<sup>nd</sup> Half</div>'+
+        (d.half==='Extra time'?'<div class="bx sel">Extra time</div>':'')+'</div>'+
+      '<div class="row2"><div class="lab">Elapsed Time in Match:</div><div class="bx num">'+esc(d.mins?d.mins+' min':'')+'</div></div>'+
+      '<div class="rule"></div>'+
+      '<table><colgroup><col style="width:30%"><col style="width:35%"><col style="width:35%"></colgroup><tr>'+
+        '<td><b>Were any cautions issued to:</b><br><i>(Please circle)</i></td>'+
+        '<td><b>(a) Individual</b> '+yn((d.pw||[])[0])+'</td><td><b>(b) General</b> '+yn((d.tw||[])[0])+'</td></tr></table>'+
+      '<div class="dh">THE INCIDENT WAS DETECTED / REFERRED BY: <small>(NB: Separate report for each official, if applicable)</small></div>'+
+      '<table><colgroup><col style="width:18%"><col style="width:22%"><col style="width:19%"><col style="width:23%"><col style="width:18%"></colgroup>'+
+      '<tr><td class="lb">Official **<br><i>(Please circle)</i></td><td class="lb">Name</td><td class="lb">Contact Number</td><td class="lb">EMail Address</td><td class="lb">Signature</td></tr>'+
+      [['ref','Referee'],['ar1','Assistant Referee'],['ar2','Assistant Referee']].map(function(o){
+        var k=o[0], sig=String(d[k+'Sig']||'');
+        return '<tr class="orow"><td><span class="off'+(det.indexOf(k)>-1?' circ':'')+'">'+o[1]+'</span></td><td>'+esc(d[k])+'</td><td>'+esc(d[k+'Tel'])+'</td><td>'+esc(d[k+'Email'])+'</td><td>'+
+          (/^data:image\/png;base64,[A-Za-z0-9+\/=]+$/.test(sig)?'<img class="sg" src="'+sig+'" alt="">':'')+'</td></tr>';
+      }).join('')+'</table>'+
+      '<div class="dd"><u>DESCRIPTION OF OFFENCE</u>: <i>(Please continue overleaf if necessary)</i></div>'+
+      '<div class="lined">'+esc(descText)+'</div>'+
+      (withReason.length?'<div class="lr"><b>Laws of the Game referenced</b><ol>'+laws.map(function(l){return '<li>'+esc(l.law)+(l.reason?' – '+esc(l.reason):'')+'</li>'}).join('')+'</ol></div>':'')+
+      '<div class="nt">Please email form to <u>ash.mac@vodamail.co.za</u> within 24 hours after the match. A copy can be sent via WhatsApp to Ashley Mackay (082 255 0242)</div>'+
+      '<div class="pv2">The personal information collected in this Form is processed by WPRU in accordance with the applicable WPRU Privacy Policy available on request.</div>';
+    return h;
+  }
+  function printPdf(){
+    var d=collect(), fromPv=!el('previewWrap').classList.contains('hidden');
+    var laws=listFor(d,P.laws,true);
+    el('printDoc').innerHTML=buildDoc(d,fromPv?el('pvDesc').value:(d.desc||''),laws);
+    var old=document.title, nm=(modeOf(d)==='player'&&d.pname)?d.pname:'report';
+    document.title='WPRRS-incident-'+(d.date||'')+'-'+nm.replace(/[^\w]+/g,'-');
+    document.body.classList.add('pdf-mode');
+    var done=function(){document.body.classList.remove('pdf-mode');document.title=old;window.removeEventListener('afterprint',done)};
+    window.addEventListener('afterprint',done);
+    setTimeout(done,180000);
+    try{window.print()}catch(e){done()}
+  }
+  el('print').onclick=printPdf;
 
   // ---- Send to the WP contacts ----
   function clip(t,n){return t.length>n?t.slice(0,n)+'\n\n[Report shortened. See the attached file for the full report.]':t}
@@ -1046,6 +1130,14 @@
         (d.pw||[])[0]||'',(d.tw||[])[0]||'',d.ref,d.refTel,d.refEmail,d.ar1,d.ar2,d.desc]);
     });
     download('WPRRS-reports.csv','﻿'+rows.map(function(r){return r.map(csvCell).join(',')}).join('\r\n'),'text/csv');
+  };
+  el('clearAll').onclick=function(){
+    var n=getReports().length;
+    if(!n){el('dashStatus').textContent='There are no saved reports to clear.';return}
+    if(confirm('Delete all '+n+' saved report(s) from this Dashboard? This cannot be undone. Tip: press "Download backup" first.')){
+      setReports([]);curId='';try{localStorage.removeItem(CUR)}catch(e){}
+      renderDash();el('dashStatus').textContent='All saved reports were deleted.';
+    }
   };
   el('exportJson').onclick=function(){download('WPRRS-backup-'+new Date().toISOString().slice(0,10)+'.json',JSON.stringify(getReports(),null,2),'application/json')};
   el('importBtn').onclick=function(){el('importFile').click()};
@@ -1232,11 +1324,7 @@
     download(fname(r.d,'-final'),r.txt);
     el('pvStatus').textContent=r.ok?'Saved to the Dashboard and downloaded.':'Downloaded, but the report could not be saved to the Dashboard (browser storage is blocked or full).';
   };
-  el('prBtn').onclick=function(){
-    document.body.classList.add('print-preview');
-    window.print();
-    document.body.classList.remove('print-preview');
-  };
+  el('prBtn').onclick=printPdf;
 
   restore();
   hintUI();
