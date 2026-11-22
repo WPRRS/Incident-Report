@@ -216,10 +216,28 @@
   .qual .ins{margin-top:5px;gap:4px}
   .qual .ins button{padding:2px 8px;font-size:.74rem}
   .qual .flag{margin-top:4px;font-size:.78rem}
+  .small{padding:4px 10px!important;font-size:.78rem!important}
+  .toast{position:fixed;left:50%;top:14px;transform:translateX(-50%);z-index:200;background:#3d7a00;color:#fff;padding:12px 20px;border-radius:10px;font-weight:700;box-shadow:0 6px 24px rgba(0,0,0,.3);max-width:92vw;text-align:center;display:none}
+  .toast.err{background:var(--red)}
+  .toast.show{display:block}
+  .modal{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:150;display:none;align-items:center;justify-content:center;padding:16px}
+  .modal.show{display:flex}
+  .modal .box{background:#fff;color:#14232f;border-radius:14px;padding:18px;max-width:440px;width:100%}
+  .modal h3{margin:0 0 8px;color:var(--primary)}
+  .modal .remind{background:var(--yellow);border-radius:8px;padding:10px;font-weight:600;font-size:.9rem;margin:10px 0}
+  .modal .actions{margin-top:10px}
+  .pd .pv2 a{color:inherit}
 </style>
 </head>
 <body>
 <a class="skip" href="#viewForm">Skip to the form</a>
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+<div id="mailModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="mmT"><div class="box">
+  <h3 id="mmT">Email Ashley Mackay</h3>
+  <p style="margin:0">Choose how you want to send it. Both addresses (To and CC) and the first lines are filled in for you.</p>
+  <div class="remind" id="mmRemind">Remember to attach the report you downloaded.</div>
+  <div class="actions"><button type="button" class="primary" id="mmGmail">Gmail (in browser)</button><button type="button" class="secondary" id="mmApp">Email app on this device</button><button type="button" class="secondary" id="mmCancel">Cancel</button></div>
+</div></div>
 <div class="a11y noprint" role="toolbar" aria-label="Accessibility options"><div class="in">
   <span>Accessibility:</span>
   <button type="button" id="fsDown" aria-label="Smaller text">A&minus;</button>
@@ -246,7 +264,7 @@
 <main>
 <div id="viewForm">
 <div class="actions noprint" style="justify-content:flex-end;margin-bottom:12px">
-  <button type="button" class="danger" id="clearTop">Clear form</button>
+  <button type="button" class="danger small" id="clearTop">Clear form</button>
 </div>
 <form id="f" autocomplete="off">
 
@@ -434,8 +452,7 @@
   </section>
 
   <div class="actions">
-    <button type="button" class="primary" id="save">Save report &amp; PDF</button>
-    <button type="button" class="secondary" id="print">Download PDF</button>
+    <button type="button" class="primary" id="save">Save &amp; Download</button>
     <button type="button" class="danger" id="clear">Clear form</button>
   </div>
   <div class="status" id="status" role="status" aria-live="polite"></div>
@@ -444,12 +461,11 @@
     <p><b>You must email this form to Ashley Mackay (ash.mac@vodamail.co.za) and CC in referees@wprugby.co.za within 36 hours after the match.</b> A copy can be sent via WhatsApp to Ashley Mackay (082 255 0242).</p>
     <div class="actions">
       <button type="button" class="secondary" id="mailBtn">Email to Ashley Mackay</button>
-      <button type="button" class="secondary" id="gmailBtn">Email via Gmail (in browser)</button>
       <button type="button" class="secondary" id="waAsh">WhatsApp Ashley Mackay</button>
     </div>
-    <p class="hint">These buttons also save the report to the Dashboard. For email, the report is downloaded as a file so you can attach it.</p>
+    <p class="hint"><b>Reminder:</b> use Save &amp; Download first, then attach the downloaded report to your email.</p>
   </section>
-  <p class="privacy">The personal information collected in this form is processed by WPRU in accordance with the applicable WPRU Privacy Policy, available on request.</p>
+  <p class="privacy">The personal information collected in this form is processed by WPRRS in accordance with the applicable WPRRS Privacy Policy (<a href="https://wprugbyreferees.co.za/privacy-policy.php" target="_blank" rel="noopener">WPRRS Privacy Policy</a>), available on request.</p>
 </form>
 
 <div id="previewWrap" class="hidden">
@@ -497,8 +513,7 @@
     <button type="button" class="secondary" id="backBtn">Back to form</button>
     <button type="button" class="secondary" id="rerunBtn">Run again</button>
     <button type="button" class="secondary" id="origBtn">Restore my original wording</button>
-    <button type="button" class="primary" id="dlBtn">Save &amp; download PDF</button>
-    <button type="button" class="secondary" id="prBtn">Download PDF</button>
+    <button type="button" class="primary" id="dlBtn">Save &amp; Download</button>
     <button type="button" class="danger" id="clearPv">Clear form</button>
   </div>
   <div class="status" id="pvStatus"></div>
@@ -942,25 +957,41 @@
   }
   function fname(d,suffix){return 'WPRRS-incident-'+(d.date||'report')+(suffix||'')+'.txt'}
 
-  el('save').onclick=function(){
-    var r=commit(false);
-    say(r.ok?'Saved to the Dashboard. In the print window, choose "Save as PDF". Press "Clear form" to start a new report.':'The report could not be saved to the Dashboard (browser storage is blocked or full). You can still save the PDF.');
-    printPdf();
-  };
+  var toastT;
+  function toast(m,err){var t=el('toast');t.textContent=m;t.className='toast show'+(err?' err':'');clearTimeout(toastT);toastT=setTimeout(function(){t.className='toast'},err?7000:6000)}
+  var lastId='';
+  function saveAndDownload(fromPv){
+    if(fromPv) syncDesc();
+    var editing=!!curId, r=commit(!!fromPv);
+    if(!r.ok){toast('The report could NOT be saved (browser storage is blocked or full). Nothing was cleared.',true);return}
+    lastId=curId;
+    toast(editing?'Saved. The earlier version of this report was replaced.':'Report saved to the Dashboard.');
+    setTimeout(function(){
+      var d=r.d, txt=fromPv?el('pvDesc').value:(d.desc||'');
+      printDocFor(d,txt,listFor(d,P.laws,true),function(){
+        doClear(true);
+        toast('Report saved and downloaded. The form is clear for the next referee.');
+      });
+    },300);
+  }
+  el('save').onclick=function(){saveAndDownload(false)};
   // ---- Clear the form (saved Dashboard reports are not touched) ----
-  function doClear(){
-    if(!confirm('Clear everything on this form? Reports already saved on the Dashboard are not affected.')) return;
+  function doClear(silent){
+    if(silent!==true&&!confirm('Clear everything on this form? Reports already saved on the Dashboard are not affected.')) return;
     f.reset();
     f.querySelectorAll('input[type=hidden]').forEach(function(x){x.value=''}); // chosen laws and signatures
     applyData({});
     P.laws=[];P.own=P.applied=P.last=P.orig=undefined;curId='';
     try{localStorage.removeItem(KEY);localStorage.removeItem(CUR)}catch(e){}
     el('previewWrap').classList.add('hidden');f.classList.remove('hidden');
-    say('Form cleared. You can start a new report.');
+    say(silent===true?'':'Form cleared. You can start a new report.');
+    updSaveLbl();
     window.scrollTo(0,0);
   }
-  el('clear').onclick=doClear;
-  el('clearTop').onclick=doClear;
+  el('clear').onclick=function(){doClear()};
+  el('clearTop').onclick=function(){doClear()};
+  el('clearPv').onclick=function(){doClear()};
+  function updSaveLbl(){var t=curId?'Save changes & Download':'Save & Download';el('save').textContent=t;el('dlBtn').textContent=t}
 
   // ---- PDF in the layout of the WP Referees incident report template ----
   var LOGO_SRC=(document.querySelector('.logo img')||{}).src||'';
@@ -1020,7 +1051,7 @@
       '<div class="lined">'+esc(descText)+'</div>'+
       (withReason.length?'<div class="lr"><b>Laws of the Game referenced</b><ol>'+laws.map(function(l){return '<li>'+esc(l.law)+(l.reason?' – '+esc(l.reason):'')+'</li>'}).join('')+'</ol></div>':'')+
       '<div class="nt">You must email this form to Ashley Mackay (<u>ash.mac@vodamail.co.za</u>) and CC in <u>referees@wprugby.co.za</u> within 36 hours after the match. A copy can be sent via WhatsApp to Ashley Mackay (082 255 0242)</div>'+
-      '<div class="pv2">The personal information collected in this Form is processed by WPRU in accordance with the applicable WPRU Privacy Policy available on request.</div>';
+      '<div class="pv2">The personal information collected in this form is processed by WPRRS in accordance with the applicable WPRRS Privacy Policy (<a href="https://wprugbyreferees.co.za/privacy-policy.php" target="_blank" rel="noopener">WPRRS Privacy Policy</a>), available on request.</div>';
     return h;
   }
   function printPdf(){
@@ -1038,29 +1069,38 @@
     setTimeout(done,180000);
     try{window.print()}catch(e){done()}
   }
-  el('print').onclick=printPdf;
 
   // ---- Send to the WP contacts ----
   function clip(t,n){return t.length>n?t.slice(0,n)+'\n\n[Report shortened. See the attached file for the full report.]':t}
   var MAIL_TO='ash.mac@vodamail.co.za',MAIL_CC='referees@wprugby.co.za';
-  function mailParts(r){
-    var nm=baseName(r.d);
-    return {subj:nm,body:'Hi Ashley,\n\nPlease find the incident report attached ('+nm+'.pdf).\n\n'+clip(r.txt,1200)};
+  function mailData(){
+    var d=collect();
+    if(d.home||d.away||d.pname||d.venue) return d;
+    var all=getReports(),rec=all.filter(function(z){return z.id===lastId})[0]||all[0];
+    return rec?(rec.form||d):d;
   }
-  function emailFlow(kind){
-    var r=commit(false), m=mailParts(r);
-    say('Step 1: in the print window choose "Save as PDF" (it is already named "'+m.subj+'"). Step 2: your email opens with both addresses filled in. Attach the saved PDF.');
-    var after=function(){
-      var url=kind==='gmail'
-        ?'https://mail.google.com/mail/?view=cm&fs=1&to='+encodeURIComponent(MAIL_TO)+'&cc='+encodeURIComponent(MAIL_CC)+'&su='+encodeURIComponent(m.subj)+'&body='+encodeURIComponent(m.body)
-        :'mailto:'+MAIL_TO+'?cc='+MAIL_CC+'&subject='+encodeURIComponent(m.subj)+'&body='+encodeURIComponent(m.body);
-      if(kind==='gmail') window.open(url,'_blank'); else window.location.href=url;
-      say('Email opened. Attach the PDF "'+m.subj+'.pdf" you just saved, then send.');
-    };
-    printDocFor(r.d,r.d.desc,listFor(r.d,P.laws,true),after);
+  function mailParts(d){
+    var nm=baseName(d),bl='______________';
+    var who=(whoLabel(d)||'').trim()||bl, dt=d.date?pdfDate(d.date):bl;
+    var g=((d.home||'')&&(d.away||''))?(d.home+' and '+d.away):bl;
+    return {file:nm,subj:nm,body:'Dear Mr Mackay\n\nI hope this email finds you well\n\nPlease find attached the Incident Report of '+who+' dated '+dt+', for the Game Between '+g+'.\n\n'};
   }
-  el('mailBtn').onclick=function(){emailFlow('mailto')};
-  el('gmailBtn').onclick=function(){emailFlow('gmail')};
+  function openMail(kind){
+    var m=mailParts(mailData());
+    if(kind==='gmail') window.open('https://mail.google.com/mail/?view=cm&fs=1&to='+encodeURIComponent(MAIL_TO)+'&cc='+encodeURIComponent(MAIL_CC)+'&su='+encodeURIComponent(m.subj)+'&body='+encodeURIComponent(m.body),'_blank');
+    else window.location.href='mailto:'+MAIL_TO+'?cc='+MAIL_CC+'&subject='+encodeURIComponent(m.subj)+'&body='+encodeURIComponent(m.body);
+    el('mailModal').classList.remove('show');
+    toast('Email opened. Remember to attach the downloaded report: '+m.file+'.pdf');
+  }
+  el('mailBtn').onclick=function(){
+    var m=mailParts(mailData());
+    el('mmRemind').textContent='Remember to attach the report you downloaded: '+m.file+'.pdf';
+    el('mailModal').classList.add('show');el('mmGmail').focus();
+  };
+  el('mmGmail').onclick=function(){openMail('gmail')};
+  el('mmApp').onclick=function(){openMail('mailto')};
+  el('mmCancel').onclick=function(){el('mailModal').classList.remove('show')};
+  document.addEventListener('keydown',function(e){if(e.key==='Escape')el('mailModal').classList.remove('show')});
   function wa(num){
     var r=commit(false);
     window.open('https://wa.me/'+num+'?text='+encodeURIComponent(clip(r.txt,3000)),'_blank');
@@ -1158,7 +1198,7 @@
           '<td>'+esc((d.home||'Home')+' '+(d.hs||0)+' - '+(d.as||0)+' '+(d.away||'Visiting'))+'</td>'+
           '<td>'+esc(whoLabel(d))+'</td>'+
           '<td>'+esc(rtypeLabel(d))+'</td><td>'+esc(laws)+'</td><td>'+esc(d.ref||'')+'</td>'+
-          '<td><button type="button" class="secondary" data-open="'+esc(r.id)+'">Open</button><button type="button" class="secondary" data-pdf="'+esc(r.id)+'">PDF</button><button type="button" class="danger" data-del="'+esc(r.id)+'">Delete</button></td></tr>';
+          '<td><button type="button" class="secondary" data-open="'+esc(r.id)+'">Edit</button><button type="button" class="secondary" data-pdf="'+esc(r.id)+'">PDF</button><button type="button" class="danger" data-del="'+esc(r.id)+'">Delete</button></td></tr>';
       }).join('');
     }
   }
@@ -1178,7 +1218,7 @@
   function loadRecord(id){
     var r=getReports().filter(function(z){return z.id===id})[0]; if(!r) return;
     f.reset();applyData(r.form||{});
-    P.laws=cleanLaws(r.laws);curId=id;
+    P.laws=cleanLaws(r.laws);curId=id;updSaveLbl();
     try{localStorage.setItem(CUR,id)}catch(e){}
     persist();
     el('previewWrap').classList.add('hidden');f.classList.remove('hidden');
@@ -1401,13 +1441,7 @@
     run();
   };
   el('origBtn').onclick=function(){el('pvDesc').value=(P.orig!==undefined?P.orig:desc.value);grow();renderQ('qPv',el('pvDesc'));renderPvDoc()};
-  el('dlBtn').onclick=function(){
-    syncDesc();
-    var r=commit(true);
-    el('pvStatus').textContent=r.ok?'Saved to the Dashboard. In the print window, choose "Save as PDF".':'The report could not be saved to the Dashboard (browser storage is blocked or full). You can still save the PDF.';
-    printPdf();
-  };
-  el('prBtn').onclick=printPdf;
+  el('dlBtn').onclick=function(){saveAndDownload(true)};
 
   restore();
   hintUI();
