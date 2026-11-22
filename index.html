@@ -130,6 +130,9 @@
   @media(max-width:520px){.scoreboard{grid-template-columns:1fr}.vs{text-align:center;padding:0}.lawrow{grid-template-columns:1fr}.addlaw{flex-direction:column}.dgrid{grid-template-columns:1fr}}
   /* ===== Printed / PDF report: follows the WP Referees incident report template ===== */
   #printDoc{display:none}
+  /* on-screen preview of the template page */
+  #pvDocWrap{background:#5c6670;border-radius:10px;padding:12px;overflow:hidden}
+  #pvDoc{background:#fff;width:190mm;margin:0 auto;padding:6mm 5mm;box-shadow:0 2px 12px rgba(0,0,0,.35)}
   @page{size:A4;margin:8mm 10mm}
   @media print{
     html{-webkit-print-color-adjust:exact;print-color-adjust:exact}
@@ -384,7 +387,7 @@
   </section>
 
   <div class="actions">
-    <button type="button" class="primary" id="save">Save report</button>
+    <button type="button" class="primary" id="save">Save report &amp; PDF</button>
     <button type="button" class="secondary" id="print">Download PDF</button>
     <button type="button" class="danger" id="clear">Clear form</button>
   </div>
@@ -403,7 +406,7 @@
 
 <div id="previewWrap" class="hidden">
   <section>
-    <h2>Report preview</h2>
+    <h2>Report preview (as it will print)</h2>
     <details class="ais noprint" id="aiSettings">
       <summary>AI settings</summary>
       <div class="grid">
@@ -414,7 +417,8 @@
       <p class="hint">Use either the service address or your own key. A key typed here is stored in this browser only; do not use it on a shared computer.</p>
     </details>
     <div class="status" id="aiStatus"></div>
-    <pre class="pv" id="pvHead"></pre>
+    <div id="pvDocWrap"><div id="pvDoc" class="pd"></div></div>
+    <p class="hint noprint">This is the report in the WP template layout. Change the laws or the description below and the preview updates.</p>
   </section>
 
   <section>
@@ -445,7 +449,7 @@
     <button type="button" class="secondary" id="backBtn">Back to form</button>
     <button type="button" class="secondary" id="rerunBtn">Run again</button>
     <button type="button" class="secondary" id="origBtn">Restore my original wording</button>
-    <button type="button" class="primary" id="dlBtn">Save final report</button>
+    <button type="button" class="primary" id="dlBtn">Save &amp; download PDF</button>
     <button type="button" class="secondary" id="prBtn">Download PDF</button>
     <button type="button" class="danger" id="clearPv">Clear form</button>
   </div>
@@ -889,8 +893,8 @@
 
   el('save').onclick=function(){
     var r=commit(false);
-    download(fname(r.d),r.txt);
-    say(r.ok?'Saved to the Dashboard and downloaded. Press "Clear form" to start a new report.':'Downloaded, but the report could not be saved to the Dashboard (browser storage is blocked or full).');
+    say(r.ok?'Saved to the Dashboard. In the print window, choose "Save as PDF". Press "Clear form" to start a new report.':'The report could not be saved to the Dashboard (browser storage is blocked or full). You can still save the PDF.');
+    printPdf();
   };
   // ---- Clear the form (saved Dashboard reports are not touched) ----
   function doClear(){
@@ -970,8 +974,10 @@
   }
   function printPdf(){
     var d=collect(), fromPv=!el('previewWrap').classList.contains('hidden');
-    var laws=listFor(d,P.laws,true);
-    el('printDoc').innerHTML=buildDoc(d,fromPv?el('pvDesc').value:(d.desc||''),laws);
+    printDocFor(d,fromPv?el('pvDesc').value:(d.desc||''),listFor(d,P.laws,true));
+  }
+  function printDocFor(d,txt,laws){
+    el('printDoc').innerHTML=buildDoc(d,txt,laws);
     var old=document.title, nm=(modeOf(d)==='player'&&d.pname)?d.pname:'report';
     document.title='WPRRS-incident-'+(d.date||'')+'-'+nm.replace(/[^\w]+/g,'-');
     document.body.classList.add('pdf-mode');
@@ -1088,7 +1094,7 @@
           '<td>'+esc((d.home||'Home')+' '+(d.hs||0)+' - '+(d.as||0)+' '+(d.away||'Visiting'))+'</td>'+
           '<td>'+esc(whoLabel(d))+'</td>'+
           '<td>'+esc(rtypeLabel(d))+'</td><td>'+esc(laws)+'</td><td>'+esc(d.ref||'')+'</td>'+
-          '<td><button type="button" class="secondary" data-open="'+esc(r.id)+'">Open</button><button type="button" class="danger" data-del="'+esc(r.id)+'">Delete</button></td></tr>';
+          '<td><button type="button" class="secondary" data-open="'+esc(r.id)+'">Open</button><button type="button" class="secondary" data-pdf="'+esc(r.id)+'">PDF</button><button type="button" class="danger" data-del="'+esc(r.id)+'">Delete</button></td></tr>';
       }).join('');
     }
   }
@@ -1096,8 +1102,9 @@
   el('fQ').addEventListener('input',renderDash);
 
   el('tbody').addEventListener('click',function(e){
-    var o=e.target.getAttribute('data-open'), x=e.target.getAttribute('data-del');
+    var o=e.target.getAttribute('data-open'), x=e.target.getAttribute('data-del'), pf=e.target.getAttribute('data-pdf');
     if(o) loadRecord(o);
+    if(pf){var rec=getReports().filter(function(z){return z.id===pf})[0];if(rec) printDocFor(rec.form||{},(rec.form||{}).desc||'',cleanLaws(rec.laws))}
     if(x&&confirm('Delete this report from the Dashboard? This cannot be undone.')){
       setReports(getReports().filter(function(r){return r.id!==x}));
       if(x===curId){curId='';try{localStorage.removeItem(CUR)}catch(er){}}
@@ -1231,7 +1238,20 @@
   }
 
   function grow(){var t=el('pvDesc');t.style.height='auto';t.style.height=Math.max(220,t.scrollHeight+4)+'px'}
+  // Live preview of the report in the WP template layout
+  function fitPv(){
+    var w=el('pvDocWrap'),p=el('pvDoc');p.style.zoom='';
+    var avail=w.clientWidth-24,need=p.offsetWidth;
+    if(avail>100&&need>avail) p.style.zoom=avail/need;
+  }
+  function renderPvDoc(){
+    var d=collect();
+    el('pvDoc').innerHTML=buildDoc(d,el('pvDesc').value,listFor(d,P.laws,true));
+    fitPv();
+  }
+  window.addEventListener('resize',fitPv);
   function renderLaws(){
+    renderPvDoc();
     var box=el('lawList');
     if(!P.laws.length){box.innerHTML='<p class="hint">No laws added yet. Use the list below to add one.</p>';return}
     box.innerHTML=P.laws.map(function(l,i){
@@ -1240,10 +1260,10 @@
              '<button type="button" class="danger noprint" data-rm="'+i+'">Remove</button></div>';
     }).join('');
   }
-  el('lawList').addEventListener('input',function(e){var i=e.target.getAttribute('data-i');if(i!==null)P.laws[+i][e.target.getAttribute('data-k')]=e.target.value});
+  el('lawList').addEventListener('input',function(e){var i=e.target.getAttribute('data-i');if(i!==null){P.laws[+i][e.target.getAttribute('data-k')]=e.target.value;renderPvDoc()}});
   el('lawList').addEventListener('click',function(e){var r=e.target.getAttribute('data-rm');if(r!==null){P.laws.splice(+r,1);renderLaws()}});
   el('addLawBtn').onclick=function(){var v=el('addLaw').value;if(v){P.laws.push({law:v,reason:''});renderLaws();el('addLaw').value=''}};
-  el('pvDesc').addEventListener('input',function(){grow();renderQ('qPv',el('pvDesc'))});
+  el('pvDesc').addEventListener('input',function(){grow();renderQ('qPv',el('pvDesc'));renderPvDoc()});
   bindQ('qPv',el('pvDesc'));
   function fillList(id,items){el(id).innerHTML=(items&&items.length?items:['None.']).map(function(x){return '<li>'+esc(x)+'</li>'}).join('')}
 
@@ -1274,7 +1294,6 @@
   }
 
   function run(){
-    el('pvHead').textContent=text(collect()).split('\n\nDESCRIPTION')[0];
     el('aiStatus').textContent='Improving your report…';
     el('pvDesc').value=desc.value;grow();renderQ('qPv',el('pvDesc'));
     P.laws=[];renderLaws();fillList('sugg',[]);fillList('miss',[]);
@@ -1317,12 +1336,12 @@
     if(P.last!==undefined&&el('pvDesc').value.trim()!==String(P.last).trim()&&!confirm('Running again replaces the edits you made in the preview. Continue?')) return;
     run();
   };
-  el('origBtn').onclick=function(){el('pvDesc').value=(P.orig!==undefined?P.orig:desc.value);grow();renderQ('qPv',el('pvDesc'))};
+  el('origBtn').onclick=function(){el('pvDesc').value=(P.orig!==undefined?P.orig:desc.value);grow();renderQ('qPv',el('pvDesc'));renderPvDoc()};
   el('dlBtn').onclick=function(){
     syncDesc();
     var r=commit(true);
-    download(fname(r.d,'-final'),r.txt);
-    el('pvStatus').textContent=r.ok?'Saved to the Dashboard and downloaded.':'Downloaded, but the report could not be saved to the Dashboard (browser storage is blocked or full).';
+    el('pvStatus').textContent=r.ok?'Saved to the Dashboard. In the print window, choose "Save as PDF".':'The report could not be saved to the Dashboard (browser storage is blocked or full). You can still save the PDF.';
+    printPdf();
   };
   el('prBtn').onclick=printPdf;
 
