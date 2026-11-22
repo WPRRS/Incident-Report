@@ -441,9 +441,10 @@
   <div class="status" id="status" role="status" aria-live="polite"></div>
 
   <section class="notice" style="margin-top:16px">
-    <p><b>You must email this form to Ashley Mackay (ash.mac@vodamail.co.za) and copy in referees@wprugby.co.za within 24 hours after the match.</b> A copy can be sent via WhatsApp to Ashley Mackay (082 255 0242).</p>
+    <p><b>You must email this form to Ashley Mackay (ash.mac@vodamail.co.za) and CC in referees@wprugby.co.za within 36 hours after the match.</b> A copy can be sent via WhatsApp to Ashley Mackay (082 255 0242).</p>
     <div class="actions">
-      <button type="button" class="secondary" id="mailBtn">Email to Ashley Mackay (cc referees)</button>
+      <button type="button" class="secondary" id="mailBtn">Email to Ashley Mackay</button>
+      <button type="button" class="secondary" id="gmailBtn">Email via Gmail (in browser)</button>
       <button type="button" class="secondary" id="waAsh">WhatsApp Ashley Mackay</button>
     </div>
     <p class="hint">These buttons also save the report to the Dashboard. For email, the report is downloaded as a file so you can attach it.</p>
@@ -1018,7 +1019,7 @@
       '<div class="dd"><u>DESCRIPTION OF OFFENCE</u>: <i>(Please continue overleaf if necessary)</i></div>'+
       '<div class="lined">'+esc(descText)+'</div>'+
       (withReason.length?'<div class="lr"><b>Laws of the Game referenced</b><ol>'+laws.map(function(l){return '<li>'+esc(l.law)+(l.reason?' – '+esc(l.reason):'')+'</li>'}).join('')+'</ol></div>':'')+
-      '<div class="nt">Please email form to <u>ash.mac@vodamail.co.za</u> and cc <u>referees@wprugby.co.za</u> within 24 hours after the match. A copy can be sent via WhatsApp to Ashley Mackay (082 255 0242)</div>'+
+      '<div class="nt">You must email this form to Ashley Mackay (<u>ash.mac@vodamail.co.za</u>) and CC in <u>referees@wprugby.co.za</u> within 36 hours after the match. A copy can be sent via WhatsApp to Ashley Mackay (082 255 0242)</div>'+
       '<div class="pv2">The personal information collected in this Form is processed by WPRU in accordance with the applicable WPRU Privacy Policy available on request.</div>';
     return h;
   }
@@ -1026,12 +1027,13 @@
     var d=collect(), fromPv=!el('previewWrap').classList.contains('hidden');
     printDocFor(d,fromPv?el('pvDesc').value:(d.desc||''),listFor(d,P.laws,true));
   }
-  function printDocFor(d,txt,laws){
+  function baseName(d){return ('Incident Report_'+(d.date||'')+'_'+(rtypeLabel(d)||'Report')).replace(/[\\\/:*?"<>|]+/g,'').trim()}
+  function printDocFor(d,txt,laws,after){
     el('printDoc').innerHTML=buildDoc(d,txt,laws);
     var old=document.title, nm=(modeOf(d)==='player'&&d.pname)?d.pname:'report';
-    document.title='WPRRS-incident-'+(d.date||'')+'-'+nm.replace(/[^\w]+/g,'-');
+    document.title=baseName(d);
     document.body.classList.add('pdf-mode');
-    var done=function(){document.body.classList.remove('pdf-mode');document.title=old;window.removeEventListener('afterprint',done)};
+    var fired=false;var done=function(){if(fired)return;fired=true;document.body.classList.remove('pdf-mode');document.title=old;window.removeEventListener('afterprint',done);if(after)after()};
     window.addEventListener('afterprint',done);
     setTimeout(done,180000);
     try{window.print()}catch(e){done()}
@@ -1040,13 +1042,25 @@
 
   // ---- Send to the WP contacts ----
   function clip(t,n){return t.length>n?t.slice(0,n)+'\n\n[Report shortened. See the attached file for the full report.]':t}
-  el('mailBtn').onclick=function(){
-    var r=commit(false);
-    download(fname(r.d),r.txt);
-    var subj='Incident report - '+(rtypeLabel(r.d)||'report')+' - '+(r.d.date||'');
-    window.location.href='mailto:ash.mac@vodamail.co.za?cc=referees@wprugby.co.za&subject='+encodeURIComponent(subj)+'&body='+encodeURIComponent(clip(r.txt,1400));
-    say('Saved. Please attach the downloaded file to the email.');
-  };
+  var MAIL_TO='ash.mac@vodamail.co.za',MAIL_CC='referees@wprugby.co.za';
+  function mailParts(r){
+    var nm=baseName(r.d);
+    return {subj:nm,body:'Hi Ashley,\n\nPlease find the incident report attached ('+nm+'.pdf).\n\n'+clip(r.txt,1200)};
+  }
+  function emailFlow(kind){
+    var r=commit(false), m=mailParts(r);
+    say('Step 1: in the print window choose "Save as PDF" (it is already named "'+m.subj+'"). Step 2: your email opens with both addresses filled in. Attach the saved PDF.');
+    var after=function(){
+      var url=kind==='gmail'
+        ?'https://mail.google.com/mail/?view=cm&fs=1&to='+encodeURIComponent(MAIL_TO)+'&cc='+encodeURIComponent(MAIL_CC)+'&su='+encodeURIComponent(m.subj)+'&body='+encodeURIComponent(m.body)
+        :'mailto:'+MAIL_TO+'?cc='+MAIL_CC+'&subject='+encodeURIComponent(m.subj)+'&body='+encodeURIComponent(m.body);
+      if(kind==='gmail') window.open(url,'_blank'); else window.location.href=url;
+      say('Email opened. Attach the PDF "'+m.subj+'.pdf" you just saved, then send.');
+    };
+    printDocFor(r.d,r.d.desc,listFor(r.d,P.laws,true),after);
+  }
+  el('mailBtn').onclick=function(){emailFlow('mailto')};
+  el('gmailBtn').onclick=function(){emailFlow('gmail')};
   function wa(num){
     var r=commit(false);
     window.open('https://wa.me/'+num+'?text='+encodeURIComponent(clip(r.txt,3000)),'_blank');
